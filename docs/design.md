@@ -1,6 +1,6 @@
 # Echoes — Design (v1)
 
-*Approvato il 2026-07-22. Caso studio per il portfolio, materiale didattico React/Next.js/TypeScript.*
+_Approvato il 2026-07-22. Caso studio per il portfolio, materiale didattico React/Next.js/TypeScript._
 
 ## Cos'è
 
@@ -22,6 +22,7 @@ Un solo utente Spotify (Giovanni), autorizzato una volta sola:
 3. Refresh token in variabile d'ambiente. Il server scambia refresh token → access token (validità 1h, tenuto in cache in scope modulo).
 
 Scope minimi:
+
 - `user-read-currently-playing`
 - `user-top-read`
 - `user-read-recently-played`
@@ -30,38 +31,40 @@ Env vars (solo server, mai `NEXT_PUBLIC_`): `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT
 
 ## Struttura del progetto
 
+Senza cartella `src/`: le directory stanno nella root del progetto (scelta di Giovanni, layout di default di `create-next-app`).
+
 ```
 echoes/
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx          # shell, font, metadata
-│   │   ├── page.tsx            # home: Server Component async
-│   │   ├── globals.css         # Tailwind + stili custom con @apply
-│   │   └── api/
-│   │       └── now-playing/
-│   │           └── route.ts    # endpoint interno per il polling
-│   ├── components/
-│   │   ├── NowPlaying.tsx      # client component (polling)
-│   │   ├── TopArtists.tsx      # server component
-│   │   ├── TopTracks.tsx       # server component
-│   │   ├── RecentTracks.tsx    # server component
-│   │   └── TimeRangeTabs.tsx   # switcher finestre temporali
-│   ├── lib/
-│   │   └── spotify.ts          # token management + fetcher tipizzati
-│   └── types/
-│       └── spotify.ts          # interfacce TS delle risposte Spotify
+├── app/
+│   ├── layout.tsx          # shell, font, metadata
+│   ├── page.tsx            # home: Server Component async
+│   ├── globals.css         # Tailwind + stili custom con @apply
+│   └── api/
+│       └── now-playing/
+│           └── route.ts    # endpoint interno per il polling
+├── components/
+│   ├── NowPlaying.tsx      # client component (polling)
+│   ├── TopArtists.tsx      # server component
+│   ├── TopTracks.tsx       # server component
+│   ├── RecentTracks.tsx    # server component
+│   └── TimeRangeTabs.tsx   # switcher finestre temporali
+├── lib/
+│   └── spotify.ts          # token management + fetcher tipizzati
+└── types/
+    └── spotify.ts          # interfacce TS delle risposte Spotify
 ```
 
 ## Flusso dati e caching
 
-| Dato | Cambia ogni… | Strategia |
-|---|---|---|
-| Top artisti/brani | settimane | fetch server-side, `revalidate: 3600` |
-| Ascolti recenti | ore | fetch server-side, `revalidate: 300` |
-| Now playing | secondi | client component, polling su `/api/now-playing` ogni ~8s |
+| Dato              | Cambia ogni… | Strategia                                                |
+| ----------------- | ------------ | -------------------------------------------------------- |
+| Top artisti/brani | settimane    | fetch server-side, `revalidate: 3600`                    |
+| Ascolti recenti   | ore          | fetch server-side, `revalidate: 300`                     |
+| Now playing       | secondi      | client component, polling su `/api/now-playing` ogni ~8s |
 
 Principi:
-- I dati lenti li rende il server e li mette in cache: pagina istantanea, un solo fetch per intervallo *in totale* (non per visitatore).
+
+- I dati lenti li rende il server e li mette in cache: pagina istantanea, un solo fetch per intervallo _in totale_ (non per visitatore).
 - Il now playing è l'unica isola client. Il polling va sempre verso la route handler interna, mai verso Spotify dal browser: il token non deve mai lasciare il server.
 - Lo switcher delle finestre temporali usa i searchParams dell'URL (`?range=short_term`): pattern "URL come stato", il server component rilegge il parametro e ri-renderizza.
 
