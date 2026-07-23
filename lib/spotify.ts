@@ -1,0 +1,72 @@
+import "server-only";
+import type { Artist, TimeRange } from "@/types/spotify";
+
+// tipi privati del modulo: descrivono le risposte di Spotify, solo i campi usati
+type AccessTokenResponse = {
+  access_token: string;
+  expires_in: number;
+};
+
+type TopArtistsResponse = {
+  items: Artist[];
+};
+
+const clientId = requestEnv("SPOTIFY_CLIENT_ID");
+const clientSecret = requestEnv("SPOTIFY_CLIENT_SECRET");
+const refreshToken = requestEnv("SPOTIFY_REFRESH_TOKEN");
+let cachedAccessToken: { value: string; expiresAt: number } | null = null;
+
+// function to get token
+export async function getAccessToken(): Promise<string> {
+  // check della cache
+  if (cachedAccessToken && cachedAccessToken.expiresAt - 60_000 > Date.now()) {
+    return cachedAccessToken.value;
+  }
+
+  // se la cache è scaduta, richiediamo un nuovo token
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+    },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get token: ${response.status} ${await response.text()}`);
+  }
+
+  const tokenResponse: AccessTokenResponse = await response.json();
+  cachedAccessToken = { value: tokenResponse.access_token, expiresAt: Date.now() + tokenResponse.expires_in * 1000 };
+  return tokenResponse.access_token;
+}
+
+// function to get top artists
+export async function getTopArtists(timeRange: TimeRange = "medium_term"): Promise<Artist[]> {
+  const accessToken = await getAccessToken();
+  const response = await fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get top artists: ${response.status} ${await response.text()}`);
+  }
+
+  const artistsResponse: TopArtistsResponse = await response.json();
+  return artistsResponse.items;
+}
+
+// helper function to request an environment variable
+function requestEnv(env: string): string {
+  const value = process.env[env];
+  if (!value) {
+    throw new Error(`${env} is not set`);
+  }
+  return value;
+}
