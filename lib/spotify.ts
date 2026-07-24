@@ -73,3 +73,10 @@ function requestEnv(env: string): string {
   }
   return value;
 }
+
+export function toTimeRange(value: string | string[] | undefined): TimeRange {
+  if (value === "short_term" || value === "medium_term" || value === "long_term") {
+    return value;
+  }
+  return "medium_term";
+}

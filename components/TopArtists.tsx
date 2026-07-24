@@ -1,7 +1,11 @@
 import { getTopArtists } from "@/lib/spotify";
+import { TimeRange } from "@/types/spotify";
+type Props = {
+  timeRange: TimeRange;
+};
 
-export default async function TopArtists() {
-  const topArtists = await getTopArtists();
+export default async function TopArtists({ timeRange }: Props) {
+  const topArtists = await getTopArtists(timeRange);
   return (
     <div>
       <h2>Your Top Artists</h2>

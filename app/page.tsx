@@ -1,10 +1,18 @@
 import TopArtists from "@/components/TopArtists";
+import TimeRangeTabs from "@/components/TimeRangeTabs";
+import { toTimeRange } from "@/lib/spotify";
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const range  = toTimeRange((await searchParams).range);
   return (
     <main>
       <h1>Welcome to Echoes</h1>
-      <TopArtists />
+      <TimeRangeTabs timeRange={range} />
+      <TopArtists timeRange={range} />
     </main>
   );
 }
