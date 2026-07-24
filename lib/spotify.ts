@@ -1,7 +1,7 @@
 import "server-only";
 import type { Artist, TimeRange } from "@/types/spotify";
 
-// tipi privati del modulo: descrivono le risposte di Spotify, solo i campi usati
+// Module-private types: shape of Spotify's responses, only the fields we actually use
 type AccessTokenResponse = {
   access_token: string;
   expires_in: number;
@@ -16,14 +16,15 @@ const clientSecret = requestEnv("SPOTIFY_CLIENT_SECRET");
 const refreshToken = requestEnv("SPOTIFY_REFRESH_TOKEN");
 let cachedAccessToken: { value: string; expiresAt: number } | null = null;
 
-// function to get token
+// Returns a valid access token, transparently refreshing it when missing or stale.
+// The cache lives in module scope, so it is shared across all requests of the same server process.
 export async function getAccessToken(): Promise<string> {
-  // check della cache
+  // 60s safety margin: better an early refresh than a token dying mid-request
   if (cachedAccessToken && cachedAccessToken.expiresAt - 60_000 > Date.now()) {
     return cachedAccessToken.value;
   }
 
-  // se la cache è scaduta, richiediamo un nuovo token
+  // Cache miss or stale: exchange the long-lived refresh token for a fresh access token (1h lifetime)
   const response = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: {
@@ -45,7 +46,6 @@ export async function getAccessToken(): Promise<string> {
   return tokenResponse.access_token;
 }
 
-// function to get top artists
 export async function getTopArtists(timeRange: TimeRange = "medium_term"): Promise<Artist[]> {
   const accessToken = await getAccessToken();
   const response = await fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}`, {
@@ -62,7 +62,7 @@ export async function getTopArtists(timeRange: TimeRange = "medium_term"): Promi
   return artistsResponse.items;
 }
 
-// helper function to request an environment variable
+// Reads a required env var, failing fast with a clear message if missing
 function requestEnv(env: string): string {
   const value = process.env[env];
   if (!value) {
