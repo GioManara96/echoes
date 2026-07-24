@@ -52,6 +52,9 @@ export async function getTopArtists(timeRange: TimeRange = "medium_term"): Promi
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+    next: {
+      revalidate: 3600,
+    },
   });
 
   if (!response.ok) {
