@@ -7,7 +7,7 @@ export default async function Home({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const range  = toTimeRange((await searchParams).range);
+  const range = toTimeRange((await searchParams).range);
   return (
     <main>
       <h1>Welcome to Echoes</h1>

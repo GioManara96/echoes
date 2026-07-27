@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TimeRange } from "@/types/spotify";
+import type { TimeRange } from "@/types/spotify";
 
 type Props = {
   timeRange: TimeRange;
