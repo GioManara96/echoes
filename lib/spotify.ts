@@ -11,6 +11,27 @@ type TopArtistsResponse = {
   items: Artist[];
 };
 
+export type NowPlayingResponse = {
+  is_playing: boolean;
+  progress_ms: number;
+  item: {
+    album: {
+      images: {
+        url: string;
+      }[];
+    };
+    artists: {
+      external_urls: {
+        spotify: string;
+      };
+      id: string;
+      name: string;
+    }[];
+    name: string;
+    duration_ms: number;
+  };
+};
+
 const clientId = requestEnv("SPOTIFY_CLIENT_ID");
 const clientSecret = requestEnv("SPOTIFY_CLIENT_SECRET");
 const refreshToken = requestEnv("SPOTIFY_REFRESH_TOKEN");
@@ -79,4 +100,24 @@ export function toTimeRange(value: string | string[] | undefined): TimeRange {
     return value;
   }
   return "medium_term";
+}
+
+export async function getNowPlaying(): Promise<NowPlayingResponse | null> {
+  const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+    headers: {
+      Authorization: `Bearer ${await getAccessToken()}`,
+    },
+    cache: "no-store",
+  });
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to get now playing: ${response.status} ${await response.text()}`);
+  }
+
+  const nowPlayingResponse: NowPlayingResponse = await response.json();
+  return nowPlayingResponse;
 }
