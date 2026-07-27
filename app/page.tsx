@@ -1,5 +1,6 @@
 import TopArtists from "@/components/TopArtists";
 import TimeRangeTabs from "@/components/TimeRangeTabs";
+import NowPlaying from "@/components/NowPlaying";
 import { toTimeRange } from "@/lib/spotify";
 
 export default async function Home({
@@ -13,6 +14,7 @@ export default async function Home({
       <h1>Welcome to Echoes</h1>
       <TimeRangeTabs timeRange={range} />
       <TopArtists timeRange={range} />
+      <NowPlaying />
     </main>
   );
 }
