@@ -12,12 +12,15 @@ export default async function Home({
   const range = toTimeRange((await searchParams).range);
   const limit = toRecentlyPlayedLimit((await searchParams).limit);
   return (
-    <main>
-      <h1>Welcome to Echoes</h1>
-      <TimeRangeTabs timeRange={range} limit={limit} />
-      <TopArtists timeRange={range} />
-      <RecentlyPlayed limit={limit} timeRange={range} />
+    <main className="page">
+      <header className="brand">
+        <h1 className="brand__title">Echoes</h1>
+        <p className="brand__tagline">What’s playing now?</p>
+      </header>
       <NowPlaying />
+      <TimeRangeTabs timeRange={range} limit={limit} />
+      <TopArtists range={range} />
+      <RecentlyPlayed limit={limit} timeRange={range} />
     </main>
   );
 }

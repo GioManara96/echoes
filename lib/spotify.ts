@@ -153,9 +153,7 @@ export async function getRecentlyPlayed(limit: RecentlyPlayedLimit = "10"): Prom
     headers: {
       Authorization: `Bearer ${await getAccessToken()}`,
     },
-    next: {
-      revalidate: 300,
-    },
+    cache: "no-store",
   });
 
   if (!response.ok) {

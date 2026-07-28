@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { NowPlayingPayload } from "@/types/spotify";
 import NextImage from "next/image";
 
 export default function NowPlaying() {
   const [nowPlaying, setNowPlaying] = useState<NowPlayingPayload | null>(null);
+  const [isDocked, setIsDocked] = useState(false);
+  const heroRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const fetchNowPlaying = async () => {
@@ -23,30 +25,97 @@ export default function NowPlaying() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!nowPlaying) return <p>Loading…</p>;
-  if (nowPlaying.status === "idle") return <p>{nowPlaying.message}</p>;
-  if (nowPlaying.status === "error") return <p>{nowPlaying.message}</p>;
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const observer = new IntersectionObserver(([entry]) => setIsDocked(!entry.isIntersecting));
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, [nowPlaying?.status]);
+
+  if (!nowPlaying) {
+    return (
+      <section className="now-playing">
+        <p className="now-playing__message">Loading…</p>
+      </section>
+    );
+  }
+
+  if (nowPlaying.status !== "active") {
+    return (
+      <section className="now-playing">
+        <p className="now-playing__message">{nowPlaying.message}</p>
+      </section>
+    );
+  }
+
+  const progressPercent =
+    nowPlaying.item.duration_ms > 0 ? Math.min(100, (nowPlaying.progress_ms / nowPlaying.item.duration_ms) * 100) : 0;
 
   return (
-    <div>
-      <h2>
-        Now Playing | <span>{nowPlaying.is_playing ? "on air" : "paused"}</span>
-      </h2>
+    <section ref={heroRef} className="now-playing">
+      <div className="now-playing__image">
+        {nowPlaying.item.album.images.length > 0 && (
+          <NextImage
+            src={nowPlaying.item.album.images[0].url}
+            alt={nowPlaying.item.name}
+            width={300}
+            height={300}
+            priority
+            className="w-full h-auto object-cover"
+          />
+        )}
+      </div>
+      <div className="now-playing__content">
+        <div className="now-playing__status">
+          {nowPlaying.is_playing ? <span className="now-playing__status--live">On air</span> : <span>Paused</span>}
+        </div>
+        <h3 className="now-playing__track">{nowPlaying.item.name}</h3>
+        <p className="now-playing__artists">
+          {nowPlaying.item.artists.map((artist, index) => (
+            <a key={artist.id} href={artist.url} target="_blank" rel="noopener noreferrer">
+              {artist.name}
+              {index < nowPlaying.item.artists.length - 1 && ", "}
+            </a>
+          ))}
+        </p>
+        <div className="now-playing__progress-bar">
+          <div
+            className={`now-playing__progress-fill${nowPlaying.is_playing ? "" : " now-playing__progress-fill--paused"}`}
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </div>
 
-      <p>{nowPlaying.item.name}</p>
-      <p>
-        Artists:
-        {nowPlaying.item.artists.map((artist) => (
-          <a key={artist.id} href={artist.url} target="_blank" rel="noopener noreferrer">
-            {artist.name}
-          </a>
-        ))}
-      </p>
-      {nowPlaying.item.album.images.length > 0 && (
-        <NextImage src={nowPlaying.item.album.images[0].url} alt={nowPlaying.item.name} width={300} height={300} />
-      )}
-      <p>{nowPlaying.item.duration_ms}</p>
-      <p>{nowPlaying.progress_ms}</p>
-    </div>
+      {/* Compact copy of the hero: hidden from assistive tech, so no links or headings inside */}
+      <div className={`now-playing-dock${isDocked ? " is-visible" : ""}`} aria-hidden="true">
+        <div className="now-playing-dock__image">
+          {nowPlaying.item.album.images.length > 0 && (
+            <NextImage
+              src={nowPlaying.item.album.images[0].url}
+              alt=""
+              width={64}
+              height={64}
+              className="w-full h-auto object-cover"
+            />
+          )}
+        </div>
+        <div className="now-playing-dock__content">
+          <div className="now-playing-dock__infos">
+            <p className="now-playing-dock__track">{nowPlaying.item.name}</p>
+            <p className="now-playing-dock__artists">
+              {nowPlaying.item.artists.map((artist) => artist.name).join(", ")}
+            </p>
+          </div>
+          <div className="now-playing-dock__status">
+            {nowPlaying.is_playing ? (
+              <span className="now-playing-dock__status--live">On air</span>
+            ) : (
+              <span>Paused</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

@@ -1,19 +1,23 @@
 import { getTopArtists } from "@/lib/spotify";
 import type { TimeRange } from "@/types/spotify";
+
 type Props = {
-  timeRange: TimeRange;
+  range: TimeRange;
 };
 
-export default async function TopArtists({ timeRange }: Props) {
-  const topArtists = await getTopArtists(timeRange);
+export default async function TopArtists({ range }: Props) {
+  const topArtists = await getTopArtists(range);
   return (
-    <div>
-      <h2>Your Top Artists</h2>
-      <ul>
-        {topArtists.map((artist) => (
-          <li key={artist.id}>{artist.name}</li>
+    <section>
+      <h2 className="section__title">Top artists</h2>
+      <ol className="artist-list">
+        {topArtists.map((artist, index) => (
+          <li key={artist.id} className="artist-list__item">
+            <span className="artist-list__rank">{String(index + 1).padStart(2, "0")}</span>
+            <span className="artist-list__name">{artist.name}</span>
+          </li>
         ))}
-      </ul>
-    </div>
+      </ol>
+    </section>
   );
 }

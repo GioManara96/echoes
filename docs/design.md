@@ -77,6 +77,7 @@ Principi:
 
 - Tailwind installato ma senza muri di classi nel JSX: classi semantiche (`.now-playing-card`, `.artist-grid`) definite in CSS con `@apply`.
 - Nota Tailwind v4: `@apply` in file CSS separati richiede la direttiva `@reference` verso il foglio principale.
+- Contratto UI tappa 8 (direzione, token, classi, strati di implementazione): [`docs/ui-spec.md`](ui-spec.md).
 
 ## Percorso didattico (tappe)
 
@@ -87,6 +88,6 @@ Principi:
 5. **TimeRangeTabs**: searchParams + navigazione → routing e URL-state
 6. **Now playing**: route handler + client component + polling → `'use client'`, `useState`, `useEffect`
 7. **Recent tracks**: consolidamento, in autonomia
-8. **Styling pass**: design della pagina, CSS con @apply
+8. **Styling pass**: design della pagina, CSS con @apply — vedi `docs/ui-spec.md`
 9. **Deploy su Vercel** + env di produzione
 10. **Caso studio** nel portfolio Nuxt (`content/projects`)
