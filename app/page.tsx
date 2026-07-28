@@ -2,7 +2,7 @@ import TopArtists from "@/components/TopArtists";
 import TimeRangeTabs from "@/components/TimeRangeTabs";
 import NowPlaying from "@/components/NowPlaying";
 import RecentlyPlayed from "@/components/RecentlyPlayed";
-import { toTimeRange, toRecentlyPlayedLimit } from "@/lib/spotify";
+import { toTimeRange, toRecentlyPlayedLimit, toTopArtistsLimit } from "@/lib/spotify";
 
 export default async function Home({
   searchParams,
@@ -11,6 +11,7 @@ export default async function Home({
 }) {
   const range = toTimeRange((await searchParams).range);
   const limit = toRecentlyPlayedLimit((await searchParams).limit);
+  const top = toTopArtistsLimit((await searchParams).top);
   return (
     <main className="page">
       <header className="brand">
@@ -18,9 +19,9 @@ export default async function Home({
         <p className="brand__tagline">What’s playing now?</p>
       </header>
       <NowPlaying />
-      <TimeRangeTabs timeRange={range} limit={limit} />
-      <TopArtists range={range} />
-      <RecentlyPlayed limit={limit} timeRange={range} />
+      <TimeRangeTabs timeRange={range} limit={limit} top={top} />
+      <TopArtists range={range} top={top} />
+      <RecentlyPlayed limit={limit} />
     </main>
   );
 }

@@ -1,30 +1,36 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { RECENTLY_PLAYED_LIMITS, type RecentlyPlayedLimit, type TimeRange } from "@/types/spotify";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Props = {
-  limit: RecentlyPlayedLimit;
-  timeRange: TimeRange;
+  paramName: string;
+  label?: string;
+  options: readonly string[];
+  value: string;
 };
 
-export default function LimitSelect({ limit, timeRange }: Props) {
+export default function LimitSelect({ paramName, label = "Show", options, value }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   return (
     <div>
-      <label className="limit-select__label" htmlFor="limit">
-        Show
+      <label className="limit-select__label" htmlFor={`limit-select-${paramName}`}>
+        {label}
       </label>
       <select
         className="limit-select"
-        id="limit"
-        value={limit}
-        onChange={(event) => router.replace(`?range=${timeRange}&limit=${event.target.value}`, { scroll: false })}
+        id={`limit-select-${paramName}`}
+        value={value}
+        onChange={(event) => {
+          const params = new URLSearchParams(searchParams.toString());
+          params.set(paramName, event.target.value);
+          router.replace(`?${params.toString()}`, { scroll: false });
+        }}
       >
-        {RECENTLY_PLAYED_LIMITS.map((value) => (
-          <option value={value} key={value}>
-            {value}
+        {options.map((option) => (
+          <option value={option} key={option}>
+            {option}
           </option>
         ))}
       </select>

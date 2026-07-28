@@ -146,25 +146,72 @@
     @apply animate-pulse transition-all duration-300;
   }
 
+  /* Ranked grid: #1 spans a 2x2 area, the rest are square cards.
+     aspect-ratio: 1 on every item keeps the span math exact (2 rows + gap = featured height). */
   .artist-list {
-    @apply flex flex-col gap-4 mt-4;
+    @apply grid grid-cols-2 md:grid-cols-4 gap-4 mt-4;
   }
 
   .artist-list__item {
-    @apply flex items-center gap-2 bg-surface border border-border p-4;
+    @apply relative overflow-hidden bg-surface border border-border;
+    aspect-ratio: 1;
+    transition: border-color 0.2s ease-in-out;
   }
 
-  .artist-list__name {
-    font-weight: 600;
+  .artist-list__item:hover {
+    border-color: var(--app-color-on-air);
+  }
+
+  .artist-list__item:first-child {
+    @apply col-span-2 row-span-2;
+  }
+
+  .artist-list__link {
+    @apply absolute inset-0 block;
+  }
+
+  .artist-list__photo {
+    @apply object-cover;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .artist-list__item:hover .artist-list__photo {
+    transform: scale(1.04);
+  }
+
+  .artist-list__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(18 22 28 / 0.9), rgb(18 22 28 / 0) 55%);
   }
 
   .artist-list__rank {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.3rem 0.45rem;
+    background: rgb(18 22 28 / 0.75);
     font-family: var(--font-mono), ui-monospace, monospace;
     font-weight: 400;
     font-size: 0.75rem;
     line-height: 1;
     letter-spacing: 0;
-    color: var(--app-color-muted);
+    color: var(--app-color-text);
+  }
+
+  .artist-list__name {
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--app-color-text);
+  }
+
+  .artist-list__item:first-child .artist-list__name {
+    font-family: var(--font-display), ui-sans-serif, sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.1;
   }
 
   .recent-list {

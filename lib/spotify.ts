@@ -1,5 +1,5 @@
 import "server-only";
-import type { Artist, TimeRange, RecentlyPlayedLimit } from "@/types/spotify";
+import type { Artist, TimeRange, RecentlyPlayedLimit, TopArtistsLimit } from "@/types/spotify";
 
 // Module-private types: shape of Spotify's responses, only the fields we actually use
 type AccessTokenResponse = {
@@ -93,9 +93,12 @@ export async function getAccessToken(): Promise<string> {
   return tokenResponse.access_token;
 }
 
-export async function getTopArtists(timeRange: TimeRange = "medium_term"): Promise<Artist[]> {
+export async function getTopArtists(
+  timeRange: TimeRange = "medium_term",
+  limit: TopArtistsLimit = "5",
+): Promise<Artist[]> {
   const accessToken = await getAccessToken();
-  const response = await fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}`, {
+  const response = await fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}&limit=${limit}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -169,4 +172,11 @@ export function toRecentlyPlayedLimit(value: string | string[] | undefined): Rec
     return value;
   }
   return "10";
+}
+
+export function toTopArtistsLimit(value: string | string[] | undefined): TopArtistsLimit {
+  if (value === "5" || value === "10" || value === "20") {
+    return value;
+  }
+  return "5";
 }

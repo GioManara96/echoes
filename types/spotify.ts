@@ -2,10 +2,6 @@ export type Artist = {
   external_urls: {
     spotify: string;
   };
-  followers: {
-    total: number;
-  };
-  genres: string[];
   href: string;
   id: string;
   images: {
@@ -52,3 +48,6 @@ export type NowPlayingPayload = NowPlayingIdle | NowPlayingActive | NowPlayingEr
 
 export const RECENTLY_PLAYED_LIMITS = ["10", "20", "50"] as const;
 export type RecentlyPlayedLimit = (typeof RECENTLY_PLAYED_LIMITS)[number];
+
+export const TOP_ARTISTS_LIMITS = ["5", "10", "20"] as const;
+export type TopArtistsLimit = (typeof TOP_ARTISTS_LIMITS)[number];

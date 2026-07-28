@@ -1,22 +1,21 @@
 import { formatPlayedAt } from "@/utils/format-played-at";
 import { getRecentlyPlayed } from "@/lib/spotify";
-import type { RecentlyPlayedLimit, TimeRange } from "@/types/spotify";
+import { RECENTLY_PLAYED_LIMITS, type RecentlyPlayedLimit } from "@/types/spotify";
 import LimitSelect from "@/components/LimitSelect";
 import NextImage from "next/image";
 
 type Props = {
   limit: RecentlyPlayedLimit;
-  timeRange: TimeRange;
 };
 
-export default async function RecentlyPlayed({ limit, timeRange }: Props) {
+export default async function RecentlyPlayed({ limit }: Props) {
   const recentlyPlayed = await getRecentlyPlayed(limit);
 
   return (
     <section className="my-16">
       <div className="flex justify-between items-center">
         <h2 className="section__title">Recently played</h2>
-        <LimitSelect limit={limit} timeRange={timeRange} />
+        <LimitSelect paramName="limit" options={RECENTLY_PLAYED_LIMITS} value={limit} />
       </div>
 
       <ul className="recent-list">
