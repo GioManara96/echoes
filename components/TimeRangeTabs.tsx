@@ -22,6 +22,7 @@ export default function TimeRangeTabs({ timeRange, limit, top }: Props) {
           href={`?range=${value}&limit=${limit}&top=${top}`}
           aria-current={timeRange === value ? "page" : undefined}
           className="tabs__link"
+          scroll={false}
         >
           {label}
         </Link>

@@ -122,6 +122,13 @@
     color: var(--app-color-muted);
   }
 
+  .now-playing__phrase {
+    font-family: var(--font-body), ui-sans-serif, sans-serif;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--app-color-muted);
+  }
+
   .recent-list__title {
     font-family: var(--font-body), ui-sans-serif, sans-serif;
     font-weight: 600;

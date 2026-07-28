@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { NowPlayingPayload } from "@/types/spotify";
 import NextImage from "next/image";
+import LastPlayed from "./LastPlayed";
 
 export default function NowPlaying() {
   const [nowPlaying, setNowPlaying] = useState<NowPlayingPayload | null>(null);
@@ -41,7 +42,18 @@ export default function NowPlaying() {
     );
   }
 
-  if (nowPlaying.status !== "active") {
+  if (nowPlaying.status === "error") {
+    return (
+      <section className="now-playing">
+        <p className="now-playing__message">{nowPlaying.message}</p>
+      </section>
+    );
+  }
+
+  if (nowPlaying.status === "idle") {
+    if (nowPlaying.lastPlayed) {
+      return <LastPlayed lastPlayed={nowPlaying.lastPlayed} />;
+    }
     return (
       <section className="now-playing">
         <p className="now-playing__message">{nowPlaying.message}</p>

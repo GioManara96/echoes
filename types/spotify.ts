@@ -16,7 +16,13 @@ export type TimeRange = "short_term" | "medium_term" | "long_term";
 
 type NowPlayingIdle = {
   status: "idle";
+  lastPlayed?: LastPlayedSummary;
   message: string;
+};
+
+export type LastPlayedSummary = {
+  track: TrackSummary;
+  played_at: string;
 };
 
 type NowPlayingError = {
@@ -28,20 +34,22 @@ type NowPlayingActive = {
   status: "active";
   is_playing: boolean;
   progress_ms: number;
-  item: {
-    album: {
-      images: {
-        url: string;
-      }[];
-    };
-    artists: {
+  item: TrackSummary;
+};
+
+export type TrackSummary = {
+  album: {
+    images: {
       url: string;
-      id: string;
-      name: string;
     }[];
-    name: string;
-    duration_ms: number;
   };
+  artists: {
+    url: string;
+    id: string;
+    name: string;
+  }[];
+  name: string;
+  duration_ms: number;
 };
 
 export type NowPlayingPayload = NowPlayingIdle | NowPlayingActive | NowPlayingError;

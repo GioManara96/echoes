@@ -53,6 +53,7 @@ type RecentlyPlayedResponse = {
         name: string;
       }[];
       name: string;
+      duration_ms: number;
     };
     played_at: string;
   }[];
@@ -165,6 +166,31 @@ export async function getRecentlyPlayed(limit: RecentlyPlayedLimit = "10"): Prom
 
   const recentlyPlayedResponse: RecentlyPlayedResponse = await response.json();
   return recentlyPlayedResponse;
+}
+
+type RecentlyPlayedItem = RecentlyPlayedResponse["items"][number];
+
+const LAST_PLAYED_TTL = 5 * 60_000;
+let cachedLastPlayed: { value: RecentlyPlayedItem | null; fetchedAt: number } | null = null;
+
+// Most recent listen, with a module-scope cache so idle polling doesn't hit Spotify on every request.
+// Same success-only principle as cachedAccessToken: errors are never stored, so they can't be replayed.
+export async function getLastPlayed(): Promise<RecentlyPlayedItem | null> {
+  if (cachedLastPlayed && Date.now() - cachedLastPlayed.fetchedAt < LAST_PLAYED_TTL) {
+    return cachedLastPlayed.value;
+  }
+
+  try {
+    const recentlyPlayed = await getRecentlyPlayed("10");
+    cachedLastPlayed = { value: recentlyPlayed.items[0] ?? null, fetchedAt: Date.now() };
+    return cachedLastPlayed.value;
+  } catch (error) {
+    // Stale-if-error: an old echo beats no echo. Only rethrow when we have nothing at all.
+    if (cachedLastPlayed) {
+      return cachedLastPlayed.value;
+    }
+    throw error;
+  }
 }
 
 export function toRecentlyPlayedLimit(value: string | string[] | undefined): RecentlyPlayedLimit {

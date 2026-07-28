@@ -270,7 +270,8 @@ _Decisioni del 28 lug 2026, dopo review della prima implementazione. Ordine di l
 
 Quando Spotify risponde 204 l’hero non collassa e non mostra un placeholder finto: mostra **l’ultimo brano ascoltato** (recently-played `limit=1`).
 
-- Route handler: su 204, chiama recently-played e arricchisce il payload idle con l’ultimo brano (track, art, artisti, `played_at`). Se anche quella chiamata fallisce, degrada al messaggio idle semplice.
+- Route handler: su 204, chiama recently-played e arricchisce il payload idle con l’ultimo brano (track, art, artisti, `played_at`). Se anche quella chiamata fallisce, degrada al messaggio idle semplice (mai a `status: "error"`).
+- **Micro-cache success-only** per il fallback: `getRecentlyPlayed` è `no-store`, quindi senza cache ogni poll da 8s in idle chiamerebbe Spotify. Variabile a livello di modulo `{ value, fetchedAt }` con TTL ~5 min, aggiornata **solo su risposta valida** — un errore non viene mai memorizzato (antidoto al 401 avvelenato; stesso pattern di `cachedAccessToken`). È la prova generale della strategia di caching dello step 9.
 - Tipi: la union `NowPlayingPayload` si estende — la variante idle guadagna i dati dell’ultimo brano (campo opzionale o variante dedicata: scelta da discutere in review, entrambe difendibili).
 - UI: stessa shell `.now-playing`; LED **Off air** in muted (mai arancione, mai pulse); copy spiritoso sopra il brano (“Silence for now — last echo:”), eventualmente randomizzato da un piccolo array; timestamp umanizzato col formatter esistente.
 - Il dock non appare in idle (regola invariata).
@@ -305,3 +306,9 @@ Vincoli: tutto dietro `prefers-reduced-motion: reduce`; le animazioni GSAP vanno
 - [ ] Nessun controllo URL perde i parametri degli altri (range + limit + top)
 - [ ] GSAP: i 3 momenti firmati, `useGSAP`, reduced-motion rispettato
 - [ ] Recently played e Top artists non richiedono endpoint chiusi (Recommendations, Audio Features/Analysis, Related Artists)
+
+### Agenda step 9 (deploy/hardening) — appunti dal campo
+
+- **`getTopArtists` ha ancora `next: { revalidate: 3600 }`** con header Authorization: stesso rischio di 401 avvelenato già visto su recently-played (la Data Cache di Next memorizza anche le risposte d’errore e la chiave ignora gli header). Decidere: `no-store` anche lì, oppure estendere la cache success-only a tutte le chiamate Spotify (funzione unica riusabile).
+- Contesto del bug osservato in dev (28 lug 2026): dev server su da >1h → token scaduto usato in revalidation → 401 cachato e replicato per ogni chiave; guarito solo col riavvio. In produzione (Vercel) il rischio è identico ma senza “riavvio facile”.
+- Nota: `genres` e `followers` sull’oggetto Artist sono deprecati da Spotify (tornano vuoti per le app recenti) — rimossi dal tipo `Artist`, non riproporli.

@@ -16,7 +16,7 @@ export default async function Home({
     <main className="page">
       <header className="brand">
         <h1 className="brand__title">Echoes</h1>
-        <p className="brand__tagline">What’s playing now?</p>
+        <p className="brand__tagline">Every listen leaves an echo.</p>
       </header>
       <NowPlaying />
       <TimeRangeTabs timeRange={range} limit={limit} top={top} />
