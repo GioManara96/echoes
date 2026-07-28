@@ -1,5 +1,5 @@
 import "server-only";
-import type { Artist, TimeRange } from "@/types/spotify";
+import type { Artist, TimeRange, RecentlyPlayedLimit } from "@/types/spotify";
 
 // Module-private types: shape of Spotify's responses, only the fields we actually use
 type AccessTokenResponse = {
@@ -11,7 +11,7 @@ type TopArtistsResponse = {
   items: Artist[];
 };
 
-export type NowPlayingResponse = {
+type NowPlayingResponse = {
   is_playing: boolean;
   progress_ms: number;
   item: {
@@ -30,6 +30,32 @@ export type NowPlayingResponse = {
     name: string;
     duration_ms: number;
   };
+};
+
+type RecentlyPlayedResponse = {
+  items: {
+    track: {
+      id: string;
+      album: {
+        images: {
+          url: string;
+        }[];
+        external_urls: {
+          spotify: string;
+        };
+        name: string;
+      };
+      artists: {
+        external_urls: {
+          spotify: string;
+        };
+        id: string;
+        name: string;
+      }[];
+      name: string;
+    };
+    played_at: string;
+  }[];
 };
 
 const clientId = requestEnv("SPOTIFY_CLIENT_ID");
@@ -120,4 +146,29 @@ export async function getNowPlaying(): Promise<NowPlayingResponse | null> {
 
   const nowPlayingResponse: NowPlayingResponse = await response.json();
   return nowPlayingResponse;
+}
+
+export async function getRecentlyPlayed(limit: RecentlyPlayedLimit = "10"): Promise<RecentlyPlayedResponse> {
+  const response = await fetch(`https://api.spotify.com/v1/me/player/recently-played?limit=${limit}`, {
+    headers: {
+      Authorization: `Bearer ${await getAccessToken()}`,
+    },
+    next: {
+      revalidate: 300,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get recently played: ${response.status} ${await response.text()}`);
+  }
+
+  const recentlyPlayedResponse: RecentlyPlayedResponse = await response.json();
+  return recentlyPlayedResponse;
+}
+
+export function toRecentlyPlayedLimit(value: string | string[] | undefined): RecentlyPlayedLimit {
+  if (value === "10" || value === "20" || value === "50") {
+    return value;
+  }
+  return "10";
 }

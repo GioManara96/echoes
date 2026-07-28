@@ -1,11 +1,12 @@
 import Link from "next/link";
-import type { TimeRange } from "@/types/spotify";
+import type { TimeRange, RecentlyPlayedLimit } from "@/types/spotify";
 
 type Props = {
   timeRange: TimeRange;
+  limit: RecentlyPlayedLimit;
 };
 
-export default function TimeRangeTabs({ timeRange }: Props) {
+export default function TimeRangeTabs({ timeRange, limit }: Props) {
   const mapTimeRanges = {
     short_term: "Last 4 weeks",
     medium_term: "Last 6 months",
@@ -14,7 +15,11 @@ export default function TimeRangeTabs({ timeRange }: Props) {
   return (
     <div>
       {Object.entries(mapTimeRanges).map(([value, label]) => (
-        <Link key={value} href={`?range=${value}`} aria-current={timeRange === value ? "page" : undefined}>
+        <Link
+          key={value}
+          href={`?range=${value}&limit=${limit}`}
+          aria-current={timeRange === value ? "page" : undefined}
+        >
           {label} &nbsp;|&nbsp;
         </Link>
       ))}

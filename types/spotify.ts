@@ -49,3 +49,6 @@ type NowPlayingActive = {
 };
 
 export type NowPlayingPayload = NowPlayingIdle | NowPlayingActive | NowPlayingError;
+
+export const RECENTLY_PLAYED_LIMITS = ["10", "20", "50"] as const;
+export type RecentlyPlayedLimit = (typeof RECENTLY_PLAYED_LIMITS)[number];
