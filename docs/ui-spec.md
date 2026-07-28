@@ -2,6 +2,8 @@
 
 _Approvato come contratto di styling per la lezione 8. Mentore propone; Giovanni implementa._
 
+> **Iterazione 2 (28 lug 2026):** decisioni prese dopo la prima implementazione — vedi la sezione [Iterazione 2](#iterazione-2--last-echo-top-artists-ricca-gsap) in fondo. Dove contraddicono il testo sotto, vince l'iterazione 2.
+
 Preview statica (palette + wireframe a blocchi): [`docs/ui-preview.html`](ui-preview.html) — apri nel browser, non fa parte dell’app Next.
 
 ## Direzione
@@ -129,7 +131,7 @@ Wireframe mobile (hero in vista → poi dock):
 
 Dettagli:
 
-- Breakpoint dock: circa `< 768px` (sotto, desktop può restare senza dock).
+- ~~Breakpoint dock: circa `< 768px` (sotto, desktop può restare senza dock).~~ **Superato:** il dock resta su tutte le viewport (scelta di Giovanni: anche su desktop, scrollando, non si perde traccia del brano).
 - Dock solo con `status === "playing" | "paused"` (item presente). Idle/error: niente barra.
 - Padding-bottom sulla `.page` ≈ altezza dock quando visibile, così l’ultima riga recent non resta sotto la barra.
 - Implementazione: `NowPlaying` è già client → `IntersectionObserver` su un sentinel/hero + stato `docked`. Attenzione a11y: il dock duplicato deve essere `aria-hidden="true"` (o un solo blocco che si sposta — più difficile); lo screen reader resta sull’hero.
@@ -257,3 +259,49 @@ Dopo ogni strato: commit sensato + chiedi review al mentore.
 - [ ] Mobile: hero in cima; dock bottom quando hero fuori viewport; niente dock se idle/error
 - [ ] Metadata e font non più “Create Next App” / Geist
 - [ ] Tema dark coi token sopra; accento arancione, non verde Spotify / non rosso generico
+
+---
+
+## Iterazione 2 — last echo, top artists ricca, GSAP
+
+_Decisioni del 28 lug 2026, dopo review della prima implementazione. Ordine di lavoro: C2 → B2 → G._
+
+### B2 — Idle come “last echo” (Now Playing)
+
+Quando Spotify risponde 204 l’hero non collassa e non mostra un placeholder finto: mostra **l’ultimo brano ascoltato** (recently-played `limit=1`).
+
+- Route handler: su 204, chiama recently-played e arricchisce il payload idle con l’ultimo brano (track, art, artisti, `played_at`). Se anche quella chiamata fallisce, degrada al messaggio idle semplice.
+- Tipi: la union `NowPlayingPayload` si estende — la variante idle guadagna i dati dell’ultimo brano (campo opzionale o variante dedicata: scelta da discutere in review, entrambe difendibili).
+- UI: stessa shell `.now-playing`; LED **Off air** in muted (mai arancione, mai pulse); copy spiritoso sopra il brano (“Silence for now — last echo:”), eventualmente randomizzato da un piccolo array; timestamp umanizzato col formatter esistente.
+- Il dock non appare in idle (regola invariata).
+
+### C2 — Top artists ricca (top 5 + select)
+
+Il tipo `Artist` contiene già `images`, `genres`, `followers`, `popularity`, `external_urls`: la sezione li usa invece di stampare solo `name`.
+
+- **Card artista**: foto (`images`), nome, 1–2 generi, link a `external_urls.spotify`. Niente `href` API, niente `uri`.
+- **Default top 5**, chiesti a Spotify via query param `limit` sull’endpoint (non 20 scaricati e nascosti). Stesso pattern funnel di `RecentlyPlayedLimit`: const `as const` + tipo derivato + funzione di validazione.
+- **Select 5/10/20** in stile `.limit-select`, URL-state. Parametro URL distinto da quello dei recenti (es. `top`); **ogni controllo che tocca l’URL deve preservare tutti gli altri parametri** — con tre parametri conviene passare a `useSearchParams` + `URLSearchParams` nel client island invece di template string a mano.
+- **Layout classifica**: griglia con il `#1` in evidenza e 2–5 più piccoli; resta un `<ol>` (l’ordine è contenuto), rank `01`–`05` in mono.
+- Paginazione vera (prev/next): esclusa, sovrastrutturata per max 20 elementi.
+
+### G — Strato GSAP (dopo che il markup è stabile)
+
+Libreria: `gsap` + `@gsap/react` (hook `useGSAP`: scoping e cleanup automatici). Dal 2025 GSAP è gratuita al 100%, plugin inclusi. Tre momenti firmati, non effetti sparsi:
+
+1. **Sequenza d’ingresso** — timeline al primo paint: brand “Echoes” con SplitText, art che entra, progress bar che si disegna (~1s totale, una volta sola).
+2. **Equalizer decorativo** accanto a ON AIR quando `is_playing` (4–5 barrette; “finto” by design: Audio Analysis è chiusa alle app nuove, nessuna dipendenza da essa).
+3. **Transizione al cambio traccia** — quando il polling rileva un `item` diverso, crossfade/flip dell’album art e del titolo.
+
+Facoltativo se avanza budget: ScrollTrigger per l’ingresso in stagger di top artists / recently played.
+
+Vincoli: tutto dietro `prefers-reduced-motion: reduce`; le animazioni GSAP vanno nei client component (l’hero lo è già; per le sezioni server serve un wrapper client sottile o si anima solo ciò che è già client).
+
+### Checklist iterazione 2
+
+- [ ] 204 simulato rimosso da `getNowPlaying` (niente rig di test dimenticati)
+- [ ] Idle: hero pieno con last echo, LED Off air muted, degrado pulito se recently-played fallisce
+- [ ] Top artists: card con foto/generi/link, top 5 di default, select 5/10/20 con URL-state completo
+- [ ] Nessun controllo URL perde i parametri degli altri (range + limit + top)
+- [ ] GSAP: i 3 momenti firmati, `useGSAP`, reduced-motion rispettato
+- [ ] Recently played e Top artists non richiedono endpoint chiusi (Recommendations, Audio Features/Analysis, Related Artists)
