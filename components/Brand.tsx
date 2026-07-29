@@ -34,7 +34,7 @@ export default function Brand() {
   return (
     <header ref={container} className="brand">
       <h1 className="brand__title">Echoes</h1>
-      <p className="brand__tagline">A public self-portrait in music</p>
+      <p className="brand__tagline">Every track leaves a trace</p>
     </header>
   );
 }
