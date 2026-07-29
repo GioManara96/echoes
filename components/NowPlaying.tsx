@@ -4,11 +4,43 @@ import { useEffect, useRef, useState } from "react";
 import type { NowPlayingPayload } from "@/types/spotify";
 import NextImage from "next/image";
 import LastPlayed from "./LastPlayed";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(useGSAP);
 
 export default function NowPlaying() {
   const [nowPlaying, setNowPlaying] = useState<NowPlayingPayload | null>(null);
   const [isDocked, setIsDocked] = useState(false);
   const heroRef = useRef<HTMLElement | null>(null);
+
+  useGSAP(
+    () => {
+      if (!heroRef.current?.querySelector(".now-playing__image")) return;
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap
+          .timeline()
+          .from(".now-playing__image", {
+            xPercent: -100,
+            opacity: 0,
+            duration: 0.7,
+            ease: "power2.out",
+          })
+          .from(
+            ".now-playing__progress-bar",
+            {
+              width: 0,
+              duration: 0.7,
+              ease: "power2.out",
+            },
+            "-=0.4",
+          );
+      });
+    },
+    { scope: heroRef, dependencies: [nowPlaying?.status] },
+  );
 
   useEffect(() => {
     const fetchNowPlaying = async () => {
