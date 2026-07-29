@@ -95,26 +95,44 @@ export async function getAccessToken(): Promise<string> {
   return tokenResponse.access_token;
 }
 
+const TOP_ARTISTS_TTL = 60 * 60_000;
+const cachedTopArtists = new Map<string, { value: Artist[]; fetchedAt: number }>();
+
+// Success-only cache like getLastPlayed, but keyed by (timeRange, limit) since each combination
+// is a different Spotify response. Errors are never stored, so they can't be replayed.
 export async function getTopArtists(
   timeRange: TimeRange = "medium_term",
   limit: TopArtistsLimit = "5",
 ): Promise<Artist[]> {
-  const accessToken = await getAccessToken();
-  const response = await fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}&limit=${limit}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    next: {
-      revalidate: 3600,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to get top artists: ${response.status} ${await response.text()}`);
+  const cacheKey = `${timeRange}:${limit}`;
+  const cached = cachedTopArtists.get(cacheKey);
+  if (cached && Date.now() - cached.fetchedAt < TOP_ARTISTS_TTL) {
+    return cached.value;
   }
 
-  const artistsResponse: TopArtistsResponse = await response.json();
-  return artistsResponse.items;
+  try {
+    const accessToken = await getAccessToken();
+    const response = await fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}&limit=${limit}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get top artists: ${response.status} ${await response.text()}`);
+    }
+
+    const artistsResponse: TopArtistsResponse = await response.json();
+    cachedTopArtists.set(cacheKey, { value: artistsResponse.items, fetchedAt: Date.now() });
+    return artistsResponse.items;
+  } catch (error) {
+    // Stale-if-error: yesterday's top artists beat an error page. Only rethrow with nothing cached.
+    if (cached) {
+      return cached.value;
+    }
+    throw error;
+  }
 }
 
 // Reads a required env var, failing fast with a clear message if missing

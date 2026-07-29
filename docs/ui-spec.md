@@ -309,6 +309,6 @@ Vincoli: tutto dietro `prefers-reduced-motion: reduce`; le animazioni GSAP vanno
 
 ### Agenda step 9 (deploy/hardening) — appunti dal campo
 
-- **`getTopArtists` ha ancora `next: { revalidate: 3600 }`** con header Authorization: stesso rischio di 401 avvelenato già visto su recently-played (la Data Cache di Next memorizza anche le risposte d’errore e la chiave ignora gli header). Decidere: `no-store` anche lì, oppure estendere la cache success-only a tutte le chiamate Spotify (funzione unica riusabile).
+- ~~**`getTopArtists` ha ancora `next: { revalidate: 3600 }`** con header Authorization: stesso rischio di 401 avvelenato già visto su recently-played (la Data Cache di Next memorizza anche le risposte d’errore e la chiave ignora gli header). Decidere: `no-store` anche lì, oppure estendere la cache success-only a tutte le chiamate Spotify (funzione unica riusabile).~~ **Risolto (29 lug 2026):** `cache: "no-store"` + cache success-only a scope di modulo come `getLastPlayed`, ma con `Map` chiavata su `timeRange:limit` (ogni combinazione è una risposta diversa), TTL 60 min, stale-if-error.
 - Contesto del bug osservato in dev (28 lug 2026): dev server su da >1h → token scaduto usato in revalidation → 401 cachato e replicato per ogni chiave; guarito solo col riavvio. In produzione (Vercel) il rischio è identico ma senza “riavvio facile”.
 - Nota: `genres` e `followers` sull’oggetto Artist sono deprecati da Spotify (tornano vuoti per le app recenti) — rimossi dal tipo `Artist`, non riproporli.
