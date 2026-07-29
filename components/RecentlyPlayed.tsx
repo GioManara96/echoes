@@ -19,7 +19,7 @@ export default async function RecentlyPlayed({ limit }: Props) {
         <LimitSelect paramName="limit" options={RECENTLY_PLAYED_LIMITS} value={limit} />
       </div>
 
-      <RevealOnScroll itemSelector=".recent-list__item">
+      <RevealOnScroll itemSelector=".recent-list__item" revealKey={limit}>
         <ul className="recent-list">
           {recentlyPlayed.items.map((item) => (
             <li key={`${item.track.id}-${item.played_at}`} className="recent-list__item">

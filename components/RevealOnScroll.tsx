@@ -10,9 +10,11 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 type Props = {
   children: ReactNode;
   itemSelector: string;
+  // Changes when the server-rendered children change (e.g. filter params), so the reveal re-runs on the new items
+  revealKey?: string;
 };
 
-export default function RevealOnScroll({ children, itemSelector }: Props) {
+export default function RevealOnScroll({ children, itemSelector, revealKey }: Props) {
   const container = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -37,7 +39,7 @@ export default function RevealOnScroll({ children, itemSelector }: Props) {
         });
       });
     },
-    { scope: container },
+    { scope: container, dependencies: [revealKey], revertOnUpdate: true },
   );
 
   return <div ref={container}>{children}</div>;

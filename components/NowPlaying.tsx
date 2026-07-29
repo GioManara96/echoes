@@ -33,7 +33,8 @@ export default function NowPlaying() {
           .from(
             ".now-playing__progress-bar",
             {
-              width: 0,
+              scaleX: 0,
+              transformOrigin: "left center",
               duration: 0.7,
               ease: "power2.out",
             },
@@ -57,12 +58,14 @@ export default function NowPlaying() {
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         gsap.set(bars, { transformOrigin: "bottom center", scaleY: 0.3 });
         bars.forEach((bar) => {
+          // String-based random + repeatRefresh: a new target height on every cycle, so the eq never loops
           gsap.to(bar, {
-            scaleY: gsap.utils.random(0.35, 1),
+            scaleY: "random(0.35, 1)",
             duration: gsap.utils.random(0.35, 0.7),
             ease: "sine.inOut",
             repeat: -1,
             yoyo: true,
+            repeatRefresh: true,
           });
         });
       });

@@ -17,7 +17,7 @@ export default async function TopArtists({ range, top }: Props) {
         <h2 className="section__title">Top artists</h2>
         <LimitSelect paramName="top" options={TOP_ARTISTS_LIMITS} value={top} />
       </div>
-      <RevealOnScroll itemSelector=".artist-list__item">
+      <RevealOnScroll itemSelector=".artist-list__item" revealKey={`${range}-${top}`}>
         <ol className="artist-list">
           {topArtists.map((artist, index) => (
             <li key={artist.id} className="artist-list__item">
