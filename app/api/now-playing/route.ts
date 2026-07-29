@@ -2,6 +2,7 @@ import { getNowPlaying, getLastPlayed } from "@/lib/spotify";
 import type { NowPlayingPayload, TrackSummary } from "@/types/spotify";
 
 type RawTrack = {
+  id: string;
   album: { images: { url: string }[] };
   artists: { external_urls: { spotify: string }; id: string; name: string }[];
   name: string;
@@ -10,6 +11,7 @@ type RawTrack = {
 
 function toTrackSummary(track: RawTrack): TrackSummary {
   return {
+    id: track.id,
     album: { images: track.album.images },
     artists: track.artists.map((artist) => {
       return {

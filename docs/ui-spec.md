@@ -304,7 +304,7 @@ Vincoli: tutto dietro `prefers-reduced-motion: reduce`; le animazioni GSAP vanno
 - [ ] Idle: hero pieno con last echo, LED Off air muted, degrado pulito se recently-played fallisce
 - [ ] Top artists: card con foto/generi/link, top 5 di default, select 5/10/20 con URL-state completo
 - [ ] Nessun controllo URL perde i parametri degli altri (range + limit + top)
-- [ ] GSAP: i 3 momenti firmati, `useGSAP`, reduced-motion rispettato
+- [x] GSAP: i 3 momenti firmati, `useGSAP`, reduced-motion rispettato (+ ScrollTrigger opzionale sulle liste)
 - [ ] Recently played e Top artists non richiedono endpoint chiusi (Recommendations, Audio Features/Analysis, Related Artists)
 
 ### Agenda step 9 (deploy/hardening) — appunti dal campo

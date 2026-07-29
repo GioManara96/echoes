@@ -38,6 +38,7 @@ type NowPlayingActive = {
 };
 
 export type TrackSummary = {
+  id: string;
   album: {
     images: {
       url: string;

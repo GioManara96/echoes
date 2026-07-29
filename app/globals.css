@@ -150,7 +150,20 @@
 
   .now-playing__status--live {
     color: var(--app-color-on-air);
-    @apply animate-pulse transition-all duration-300;
+    @apply inline-flex items-center gap-2;
+  }
+
+  .now-playing__eq {
+    @apply inline-flex items-end gap-0.5;
+    height: 0.75rem;
+  }
+
+  .now-playing__eq-bar {
+    width: 2px;
+    height: 100%;
+    background-color: var(--app-color-on-air);
+    transform-origin: bottom center;
+    transform: scaleY(0.35);
   }
 
   /* Ranked grid: #1 spans a 2x2 area, the rest are square cards.

@@ -8,11 +8,13 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(useGSAP);
+const EQUALIZER_BARS = 5;
 
 export default function NowPlaying() {
   const [nowPlaying, setNowPlaying] = useState<NowPlayingPayload | null>(null);
   const [isDocked, setIsDocked] = useState(false);
   const heroRef = useRef<HTMLElement | null>(null);
+  const prevTrackIdRef = useRef<string | null>(null);
 
   useGSAP(
     () => {
@@ -40,6 +42,102 @@ export default function NowPlaying() {
       });
     },
     { scope: heroRef, dependencies: [nowPlaying?.status] },
+  );
+
+  const isLive = nowPlaying?.status === "active" && nowPlaying.is_playing;
+  const trackId = nowPlaying?.status === "active" ? nowPlaying.item.id : null;
+
+  useGSAP(
+    () => {
+      const bars = heroRef.current?.querySelectorAll(".now-playing__eq-bar");
+      if (!bars?.length) return;
+
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.set(bars, { transformOrigin: "bottom center", scaleY: 0.3 });
+        bars.forEach((bar) => {
+          gsap.to(bar, {
+            scaleY: gsap.utils.random(0.35, 1),
+            duration: gsap.utils.random(0.35, 0.7),
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+          });
+        });
+      });
+    },
+    { scope: heroRef, dependencies: [isLive] },
+  );
+
+  useGSAP(
+    () => {
+      if (!trackId) {
+        prevTrackIdRef.current = null;
+        return;
+      }
+      if (!heroRef.current?.querySelector(".now-playing__image")) return;
+
+      const prevTrackId = prevTrackIdRef.current;
+      prevTrackIdRef.current = trackId;
+
+      // First active paint is owned by the entrance timeline
+      if (prevTrackId === null || prevTrackId === trackId) return;
+
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap
+          .timeline()
+          .from(".now-playing__image", {
+            opacity: 0,
+            scale: 0.96,
+            duration: 0.45,
+            ease: "power2.out",
+          })
+          .from(
+            ".now-playing__track",
+            {
+              opacity: 0,
+              y: 10,
+              duration: 0.35,
+              ease: "power2.out",
+            },
+            "-=0.25",
+          )
+          .from(
+            ".now-playing__artists",
+            {
+              opacity: 0,
+              y: 8,
+              duration: 0.3,
+              ease: "power2.out",
+            },
+            "-=0.2",
+          )
+          .from(
+            ".now-playing-dock__image",
+            {
+              opacity: 0,
+              duration: 0.35,
+              ease: "power2.out",
+            },
+            0,
+          )
+          .from(
+            [".now-playing-dock__track", ".now-playing-dock__artists"],
+            {
+              opacity: 0,
+              y: 6,
+              duration: 0.3,
+              ease: "power2.out",
+              stagger: 0.05,
+            },
+            "-=0.25",
+          );
+      });
+    },
+    { scope: heroRef, dependencies: [trackId] },
   );
 
   useEffect(() => {
@@ -112,7 +210,18 @@ export default function NowPlaying() {
       </div>
       <div className="now-playing__content">
         <div className="now-playing__status">
-          {nowPlaying.is_playing ? <span className="now-playing__status--live">On air</span> : <span>Paused</span>}
+          {nowPlaying.is_playing ? (
+            <span className="now-playing__status--live">
+              <span className="now-playing__eq" aria-hidden="true">
+                {Array.from({ length: EQUALIZER_BARS }).map((_, index) => (
+                  <span key={index} className="now-playing__eq-bar" />
+                ))}
+              </span>
+              On air
+            </span>
+          ) : (
+            <span>Paused</span>
+          )}
         </div>
         <h3 className="now-playing__track">{nowPlaying.item.name}</h3>
         <p className="now-playing__artists">

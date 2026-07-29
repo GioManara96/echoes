@@ -15,6 +15,7 @@ type NowPlayingResponse = {
   is_playing: boolean;
   progress_ms: number;
   item: {
+    id: string;
     album: {
       images: {
         url: string;
