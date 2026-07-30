@@ -2,7 +2,7 @@
 
 A public, live musical self-portrait built on the Spotify Web API: what I'm listening to right now, my top artists across different time ranges, and my recent listening history — all rendered server-side and updated in real time, with no login required from visitors.
 
-**Live:** [echoes-five-eta.vercel.app](https://echoes-five-eta.vercel.app/)
+**Live:** [echoes.giovannimanara.dev](https://echoes.giovannimanara.dev/)
 
 This is a portfolio case study and, just as importantly, the project I used to learn React, Next.js and TypeScript.
 
