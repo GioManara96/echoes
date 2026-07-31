@@ -11,26 +11,33 @@ type TopArtistsResponse = {
   items: Artist[];
 };
 
+// Spotify raw shapes for currently-playing — NOT our TrackSummary/EpisodeSummary.
+// Those are built later in the route mapper (kind, flat images, show.url, …).
+type SpotifyNowPlayingTrack = {
+  id: string;
+  name: string;
+  duration_ms: number;
+  album: { images: { url: string }[] };
+  artists: { external_urls: { spotify: string }; id: string; name: string }[];
+};
+
+type SpotifyNowPlayingEpisode = {
+  id: string;
+  name: string;
+  duration_ms: number;
+  images: { url: string }[];
+  show: {
+    name: string;
+    publisher?: string;
+    external_urls?: { spotify: string };
+  };
+};
+
 type NowPlayingResponse = {
+  currently_playing_type: "track" | "episode" | "ad" | "unknown";
   is_playing: boolean;
   progress_ms: number;
-  item: {
-    id: string;
-    album: {
-      images: {
-        url: string;
-      }[];
-    };
-    artists: {
-      external_urls: {
-        spotify: string;
-      };
-      id: string;
-      name: string;
-    }[];
-    name: string;
-    duration_ms: number;
-  };
+  item?: SpotifyNowPlayingTrack | SpotifyNowPlayingEpisode | null;
 };
 
 type RecentlyPlayedResponse = {
@@ -152,7 +159,7 @@ export function toTimeRange(value: string | string[] | undefined): TimeRange {
 }
 
 export async function getNowPlaying(): Promise<NowPlayingResponse | null> {
-  const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+  const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing?additional_types=episode", {
     headers: {
       Authorization: `Bearer ${await getAccessToken()}`,
     },

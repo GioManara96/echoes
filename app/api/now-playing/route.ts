@@ -1,5 +1,5 @@
 import { getNowPlaying, getLastPlayed } from "@/lib/spotify";
-import type { NowPlayingPayload, TrackSummary } from "@/types/spotify";
+import type { NowPlayingPayload, TrackSummary, EpisodeSummary, PlayingItem } from "@/types/spotify";
 
 type RawTrack = {
   id: string;
@@ -9,10 +9,23 @@ type RawTrack = {
   duration_ms: number;
 };
 
+type RawEpisode = {
+  id: string;
+  images: { url: string }[];
+  show: {
+    name: string;
+    publisher?: string;
+    external_urls?: { spotify: string };
+  };
+  name: string;
+  duration_ms: number;
+};
+
 function toTrackSummary(track: RawTrack): TrackSummary {
   return {
     id: track.id,
-    album: { images: track.album.images },
+    kind: "track",
+    images: track.album.images,
     artists: track.artists.map((artist) => {
       return {
         url: artist.external_urls.spotify,
@@ -25,10 +38,33 @@ function toTrackSummary(track: RawTrack): TrackSummary {
   };
 }
 
+function toEpisodeSummary(episode: RawEpisode): EpisodeSummary {
+  return {
+    id: episode.id,
+    kind: "episode",
+    images: episode.images,
+    show: {
+      name: episode.show.name,
+      publisher: episode.show.publisher,
+      url: episode.show.external_urls?.spotify,
+    },
+    name: episode.name,
+    duration_ms: episode.duration_ms,
+  };
+}
+
+function toPlayingItem(item: RawTrack | RawEpisode): PlayingItem {
+  // Raw discriminant: episodes have `show`, tracks have `album` + `artists`
+  if ("show" in item) {
+    return toEpisodeSummary(item);
+  }
+  return toTrackSummary(item);
+}
+
 export async function GET() {
   try {
     const nowPlaying = await getNowPlaying();
-    if (!nowPlaying) {
+    if (!nowPlaying || !nowPlaying.item) {
       try {
         const lastPlayed = await getLastPlayed();
         const idle: NowPlayingPayload = {
@@ -48,13 +84,13 @@ export async function GET() {
       }
     }
 
-    const track: NowPlayingPayload = {
+    const active: NowPlayingPayload = {
       status: "active",
       is_playing: nowPlaying.is_playing,
       progress_ms: nowPlaying.progress_ms,
-      item: toTrackSummary(nowPlaying.item),
+      item: toPlayingItem(nowPlaying.item),
     };
-    return Response.json(track);
+    return Response.json(active);
   } catch (error) {
     console.error(error);
     const errorPayload: NowPlayingPayload = {

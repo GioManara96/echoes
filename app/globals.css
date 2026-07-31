@@ -146,11 +146,27 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--app-color-muted);
+    @apply inline-flex items-center gap-2;
   }
 
   .now-playing__status--live {
     color: var(--app-color-on-air);
     @apply inline-flex items-center gap-2;
+  }
+
+  .now-playing__type {
+    color: var(--app-color-muted);
+  }
+
+  .now-playing__show-publisher {
+    font-family: var(--font-body), system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--app-color-muted);
+    @apply mt-1;
   }
 
   .now-playing__eq {

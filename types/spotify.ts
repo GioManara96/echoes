@@ -34,16 +34,15 @@ type NowPlayingActive = {
   status: "active";
   is_playing: boolean;
   progress_ms: number;
-  item: TrackSummary;
+  item: PlayingItem;
 };
 
 export type TrackSummary = {
   id: string;
-  album: {
-    images: {
-      url: string;
-    }[];
-  };
+  kind: "track";
+  images: {
+    url: string;
+  }[];
   artists: {
     url: string;
     id: string;
@@ -52,6 +51,23 @@ export type TrackSummary = {
   name: string;
   duration_ms: number;
 };
+
+export type EpisodeSummary = {
+  id: string;
+  kind: "episode";
+  images: {
+    url: string;
+  }[];
+  show: {
+    name: string;
+    publisher?: string;
+    url?: string;
+  };
+  name: string;
+  duration_ms: number;
+};
+
+export type PlayingItem = TrackSummary | EpisodeSummary;
 
 export type NowPlayingPayload = NowPlayingIdle | NowPlayingActive | NowPlayingError;
 

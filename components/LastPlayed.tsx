@@ -21,9 +21,9 @@ export default function LastPlayed({ lastPlayed }: Props) {
   return (
     <section className="now-playing">
       <div className="now-playing__image">
-        {lastPlayed.track.album.images.length > 0 && (
+        {lastPlayed.track.images.length > 0 && (
           <NextImage
-            src={lastPlayed.track.album.images[0].url}
+            src={lastPlayed.track.images[0].url}
             alt={lastPlayed.track.name}
             width={300}
             height={300}

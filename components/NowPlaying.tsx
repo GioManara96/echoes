@@ -200,9 +200,9 @@ export default function NowPlaying() {
   return (
     <section ref={heroRef} className="now-playing">
       <div className="now-playing__image">
-        {nowPlaying.item.album.images.length > 0 && (
+        {nowPlaying.item.images.length > 0 && (
           <NextImage
-            src={nowPlaying.item.album.images[0].url}
+            src={nowPlaying.item.images[0].url}
             alt={nowPlaying.item.name}
             width={300}
             height={300}
@@ -225,16 +225,37 @@ export default function NowPlaying() {
           ) : (
             <span>Paused</span>
           )}
+          {nowPlaying.item.kind === "episode" && <span className="now-playing__type">Podcast</span>}
         </div>
         <h3 className="now-playing__track">{nowPlaying.item.name}</h3>
-        <p className="now-playing__artists">
-          {nowPlaying.item.artists.map((artist, index) => (
-            <a key={artist.id} href={artist.url} target="_blank" rel="noopener noreferrer">
-              {artist.name}
-              {index < nowPlaying.item.artists.length - 1 && ", "}
-            </a>
-          ))}
-        </p>
+        <div className="now-playing__credits">
+          {nowPlaying.item.kind === "track" && (
+            <p className="now-playing__artists">
+              {nowPlaying.item.artists.map((artist, index, artists) => (
+                <a key={artist.id} href={artist.url} target="_blank" rel="noopener noreferrer">
+                  {artist.name}
+                  {index < artists.length - 1 && ", "}
+                </a>
+              ))}
+            </p>
+          )}
+          {nowPlaying.item.kind === "episode" && (
+            <>
+              <p className="now-playing__artists">
+                {nowPlaying.item.show.url ? (
+                  <a href={nowPlaying.item.show.url} target="_blank" rel="noopener noreferrer">
+                    {nowPlaying.item.show.name}
+                  </a>
+                ) : (
+                  <span>{nowPlaying.item.show.name}</span>
+                )}
+              </p>
+              {nowPlaying.item.show.publisher && (
+                <p className="now-playing__show-publisher">{nowPlaying.item.show.publisher}</p>
+              )}
+            </>
+          )}
+        </div>
         <div className="now-playing__progress-bar">
           <div
             className={`now-playing__progress-fill${nowPlaying.is_playing ? "" : " now-playing__progress-fill--paused"}`}
@@ -246,9 +267,9 @@ export default function NowPlaying() {
       {/* Compact copy of the hero: hidden from assistive tech, so no links or headings inside */}
       <div className={`now-playing-dock${isDocked ? " is-visible" : ""}`} aria-hidden="true">
         <div className="now-playing-dock__image">
-          {nowPlaying.item.album.images.length > 0 && (
+          {nowPlaying.item.images.length > 0 && (
             <NextImage
-              src={nowPlaying.item.album.images[0].url}
+              src={nowPlaying.item.images[0].url}
               alt=""
               width={64}
               height={64}
@@ -260,7 +281,8 @@ export default function NowPlaying() {
           <div className="now-playing-dock__infos">
             <p className="now-playing-dock__track">{nowPlaying.item.name}</p>
             <p className="now-playing-dock__artists">
-              {nowPlaying.item.artists.map((artist) => artist.name).join(", ")}
+              {nowPlaying.item.kind === "track" && nowPlaying.item.artists.map((artist) => artist.name).join(", ")}
+              {nowPlaying.item.kind === "episode" && nowPlaying.item.show.name}
             </p>
           </div>
           <div className="now-playing-dock__status">
