@@ -7,11 +7,15 @@ import LastPlayed from "./LastPlayed";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
+type Props = {
+  initialData: NowPlayingPayload;
+};
+
 gsap.registerPlugin(useGSAP);
 const EQUALIZER_BARS = 5;
 
-export default function NowPlaying() {
-  const [nowPlaying, setNowPlaying] = useState<NowPlayingPayload | null>(null);
+export default function NowPlaying({ initialData }: Props) {
+  const [nowPlaying, setNowPlaying] = useState<NowPlayingPayload>(initialData);
   const [isDocked, setIsDocked] = useState(false);
   const heroRef = useRef<HTMLElement | null>(null);
   const prevTrackIdRef = useRef<string | null>(null);
@@ -166,14 +170,6 @@ export default function NowPlaying() {
     observer.observe(hero);
     return () => observer.disconnect();
   }, [nowPlaying?.status]);
-
-  if (!nowPlaying) {
-    return (
-      <section className="now-playing">
-        <p className="now-playing__message">Loading…</p>
-      </section>
-    );
-  }
 
   if (nowPlaying.status === "error") {
     return (

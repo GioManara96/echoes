@@ -76,6 +76,31 @@
     @apply grid grid-cols-1 md:grid-cols-[300px_auto] gap-8 items-end my-10;
   }
 
+  .now-playing__bone {
+    background-color: var(--app-color-surface);
+    @apply animate-pulse rounded;
+  }
+
+  .now-playing__bone--art {
+    @apply aspect-square w-full;
+  }
+
+  .now-playing__bone--status {
+    @apply h-3 w-24;
+  }
+
+  .now-playing__bone--track {
+    @apply h-7 w-3/4 max-w-md;
+  }
+
+  .now-playing__bone--artists {
+    @apply h-5 w-1/2 max-w-xs;
+  }
+
+  .now-playing__bone--progress {
+    @apply mt-2 h-1 w-full rounded-full;
+  }
+
   .now-playing__image {
     @apply w-full h-full object-cover overflow-hidden;
   }

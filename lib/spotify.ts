@@ -1,5 +1,14 @@
 import "server-only";
-import type { Artist, TimeRange, RecentlyPlayedLimit, TopArtistsLimit } from "@/types/spotify";
+import type {
+  Artist,
+  TimeRange,
+  RecentlyPlayedLimit,
+  TopArtistsLimit,
+  TrackSummary,
+  EpisodeSummary,
+  PlayingItem,
+  NowPlayingPayload,
+} from "@/types/spotify";
 
 // Module-private types: shape of Spotify's responses, only the fields we actually use
 type AccessTokenResponse = {
@@ -65,6 +74,26 @@ type RecentlyPlayedResponse = {
     };
     played_at: string;
   }[];
+};
+
+type RawTrack = {
+  id: string;
+  album: { images: { url: string }[] };
+  artists: { external_urls: { spotify: string }; id: string; name: string }[];
+  name: string;
+  duration_ms: number;
+};
+
+type RawEpisode = {
+  id: string;
+  images: { url: string }[];
+  show: {
+    name: string;
+    publisher?: string;
+    external_urls?: { spotify: string };
+  };
+  name: string;
+  duration_ms: number;
 };
 
 const clientId = requestEnv("SPOTIFY_CLIENT_ID");
@@ -158,7 +187,7 @@ export function toTimeRange(value: string | string[] | undefined): TimeRange {
   return "medium_term";
 }
 
-export async function getNowPlaying(): Promise<NowPlayingResponse | null> {
+async function fetchCurrentlyPlaying(): Promise<NowPlayingResponse | null> {
   const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing?additional_types=episode", {
     headers: {
       Authorization: `Bearer ${await getAccessToken()}`,
@@ -174,8 +203,38 @@ export async function getNowPlaying(): Promise<NowPlayingResponse | null> {
     throw new Error(`Failed to get now playing: ${response.status} ${await response.text()}`);
   }
 
-  const nowPlayingResponse: NowPlayingResponse = await response.json();
-  return nowPlayingResponse;
+  return response.json();
+}
+
+export async function getNowPlayingPayload(): Promise<NowPlayingPayload> {
+  const nowPlayingResponse = await fetchCurrentlyPlaying();
+  if (!nowPlayingResponse || !nowPlayingResponse.item) {
+    try {
+      const lastPlayed = await getLastPlayed();
+      const idle: NowPlayingPayload = {
+        status: "idle",
+        message: "Silence for now...",
+        lastPlayed: lastPlayed
+          ? { track: toTrackSummary(lastPlayed.track), played_at: lastPlayed.played_at }
+          : undefined,
+      };
+      return idle;
+    } catch {
+      const idle: NowPlayingPayload = {
+        status: "idle",
+        message: "Silence for now...",
+      };
+      return idle;
+    }
+  }
+
+  const active: NowPlayingPayload = {
+    status: "active",
+    is_playing: nowPlayingResponse.is_playing,
+    progress_ms: nowPlayingResponse.progress_ms,
+    item: toPlayingItem(nowPlayingResponse.item),
+  };
+  return active;
 }
 
 export async function getRecentlyPlayed(limit: RecentlyPlayedLimit = "10"): Promise<RecentlyPlayedResponse> {
@@ -231,4 +290,44 @@ export function toTopArtistsLimit(value: string | string[] | undefined): TopArti
     return value;
   }
   return "5";
+}
+
+function toTrackSummary(track: RawTrack): TrackSummary {
+  return {
+    id: track.id,
+    kind: "track",
+    images: track.album.images,
+    artists: track.artists.map((artist) => {
+      return {
+        url: artist.external_urls.spotify,
+        id: artist.id,
+        name: artist.name,
+      };
+    }),
+    name: track.name,
+    duration_ms: track.duration_ms,
+  };
+}
+
+function toEpisodeSummary(episode: RawEpisode): EpisodeSummary {
+  return {
+    id: episode.id,
+    kind: "episode",
+    images: episode.images,
+    show: {
+      name: episode.show.name,
+      publisher: episode.show.publisher,
+      url: episode.show.external_urls?.spotify,
+    },
+    name: episode.name,
+    duration_ms: episode.duration_ms,
+  };
+}
+
+function toPlayingItem(item: RawTrack | RawEpisode): PlayingItem {
+  // Raw discriminant: episodes have `show`, tracks have `album` + `artists`
+  if ("show" in item) {
+    return toEpisodeSummary(item);
+  }
+  return toTrackSummary(item);
 }
