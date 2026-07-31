@@ -25,13 +25,7 @@ export default async function RecentlyPlayed({ limit }: Props) {
             <li key={`${item.track.id}-${item.played_at}`} className="recent-list__item">
               <div className="recent-list__image">
                 {item.track.album.images.length > 0 && (
-                  <NextImage
-                    src={item.track.album.images[0].url}
-                    alt={item.track.name}
-                    width={64}
-                    height={64}
-                    className="h-full"
-                  />
+                  <NextImage src={item.track.album.images[0].url} alt="" width={64} height={64} />
                 )}
               </div>
               <div className="recent-list__content">

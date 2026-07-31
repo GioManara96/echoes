@@ -223,7 +223,7 @@ export default function NowPlaying({ initialData }: Props) {
         {nowPlaying.item.images.length > 0 && (
           <NextImage
             src={nowPlaying.item.images[0].url}
-            alt={nowPlaying.item.name}
+            alt=""
             width={300}
             height={300}
             priority
@@ -247,6 +247,7 @@ export default function NowPlaying({ initialData }: Props) {
           )}
           {nowPlaying.item.kind === "episode" && <span className="now-playing__type">Podcast</span>}
         </div>
+        <h2 className="sr-only">Now playing</h2>
         <h3 className="now-playing__track">{nowPlaying.item.name}</h3>
         <div className="now-playing__credits">
           {nowPlaying.item.kind === "track" && (

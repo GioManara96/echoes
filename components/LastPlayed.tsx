@@ -24,7 +24,7 @@ export default function LastPlayed({ lastPlayed }: Props) {
         {lastPlayed.track.images.length > 0 && (
           <NextImage
             src={lastPlayed.track.images[0].url}
-            alt={lastPlayed.track.name}
+            alt=""
             width={300}
             height={300}
             priority
@@ -37,6 +37,7 @@ export default function LastPlayed({ lastPlayed }: Props) {
           <span>Off air · last played {formatPlayedAt(lastPlayed.played_at)}</span>
         </div>
         <p className="now-playing__phrase">{phrase}</p>
+        <h2 className="sr-only">Last played</h2>
         <h3 className="now-playing__track">{lastPlayed.track.name}</h3>
         <p className="now-playing__artists">
           {lastPlayed.track.artists.map((artist, index) => (

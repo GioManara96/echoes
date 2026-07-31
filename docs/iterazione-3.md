@@ -4,7 +4,7 @@ _31 luglio 2026. Approvato a valle del brainstorming. Mentore propone; Giovanni 
 
 Contesto: v1 è online su `echoes.giovannimanara.dev` (tappe 1–10 chiuse). Questa iterazione non aggiunge feature nuove: sistema un bug che rompe la pagina, cura il primo impatto verso l'esterno, e migliora il caricamento del pannello principale.
 
-**Fuori scope, per decisione esplicita:** test automatici e CI (non sono un prerequisito per un profilo frontend, e non è il momento), sezione Top Tracks, database e storico (restano v2), rifiniture di accessibilità puramente da checklist (contrasto misurato, `role="progressbar"`) — vedi [Cosa è stato tagliato](#cosa-è-stato-tagliato-e-perché).
+**Fuori scope, per decisione esplicita:** test automatici e CI (non sono un prerequisito per un profilo frontend, e non è il momento), sezione Top Tracks, database e storico (restano v2), rifiniture di accessibilità da checklist (contrasto misurato, `role="progressbar"`, `aria-live` sul now playing) — vedi [Cosa è stato tagliato](#cosa-è-stato-tagliato-e-perché).
 
 ## Ordine di lavoro
 
@@ -14,7 +14,7 @@ Contesto: v1 è online su `echoes.giovannimanara.dev` (tappe 1–10 chiuse). Que
 | 2 | [Metadata, Open Graph, pulizia](#2--metadata-open-graph-icone-pulizia) | Il primo impatto di chi riceve il link. Costo basso, resa alta. |
 | 3 | [Now playing renderizzato dal server + skeleton](#3--now-playing-dal-server--suspense--skeleton) | Il miglioramento tecnico più sostanzioso, e il concetto React più utile da imparare. |
 | 4 | [Polling che si ferma a scheda nascosta](#4--polling-che-si-ferma-a-scheda-nascosta) | Correttezza. Dipende dal punto 3 solo per comodità, non tecnicamente. |
-| 5 | [Accessibilità mirata](#5--accessibilità-mirata) | Tre interventi piccoli, da fare in coda. |
+| 5 | [Accessibilità mirata](#5--accessibilità-mirata) | Due interventi piccoli di igiene (alt + heading); `aria-live` tagliato. |
 
 ---
 
@@ -237,36 +237,29 @@ La Page Visibility API risolve in poche righe: fermare l'intervallo su `visibili
 
 ## 5 — Accessibilità mirata
 
-Tre interventi, scelti perché insegnano qualcosa o sistemano un'incoerenza. Il resto è tagliato.
+Due interventi di igiene (coerenza markup). `aria-live` è stato tagliato a valle: per un caso studio è sproporzionato rispetto al resto del progetto — vedi [Cosa è stato tagliato](#cosa-è-stato-tagliato-e-perché).
 
 ### 5.1 — `alt` duplicati
 
-`NowPlaying.tsx:206` ha `alt={nowPlaying.item.name}`, e a riga 229 c'è `<h3>{nowPlaying.item.name}</h3>`: uno screen reader legge il titolo, poi lo rilegge identico. Stesso schema in `LastPlayed.tsx:27` e `RecentlyPlayed.tsx:30`.
+Se il testo accanto all'immagine già dice quello che l'immagine dice, l'immagine è **decorativa** → `alt=""`. Allineare `NowPlaying`, `LastPlayed`, `RecentlyPlayed` a ciò che già fanno `TopArtists` e il dock.
 
-Regola: se il testo accanto all'immagine già dice quello che l'immagine dice, l'immagine è **decorativa** → `alt=""`. Non è una scorciatoia, è la scelta corretta — ed è già applicata correttamente in `TopArtists.tsx:33` e nel dock a riga 252. Qui si tratta solo di allineare tre file rimasti indietro.
+### 5.2 — ~~`aria-live` sul cambio brano~~ (tagliato)
 
-### 5.2 — `aria-live` sul cambio brano
-
-Il contenuto del now playing cambia da solo, ma per uno screen reader la pagina resta muta: nulla segnala l'aggiornamento. Una `aria-live="polite"` fa annunciare il nuovo brano quando arriva.
-
-**Dove metterla è tutto il punto**: solo intorno a titolo e crediti, che cambiano quando cambia il brano. Non intorno all'intero pannello, perché la progress bar si aggiorna a ogni poll e produrrebbe un annuncio ogni 8 secondi.
-
-Vale la pena farla perché il problema — annunciare contenuto che si aggiorna da solo — ritorna di continuo nel frontend: toast, notifiche, risultati di ricerca live, carrelli. È un pattern che o si è fatto una volta, o quando serve non si sa da dove partire.
+Lasciato documentato solo come idea: una `aria-live="polite"` intorno a titolo + crediti annuncerebbe il cambio brano agli screen reader, senza avvolgere la progress bar (che si aggiorna ogni poll). Utile in prodotti reali; fuori scope qui.
 
 ### 5.3 — Gerarchia dei titoli
 
-`Brand.tsx:36` è l'`<h1>`; le sezioni sono `<h2>`; ma il titolo del brano è un `<h3>` (`NowPlaying.tsx:229`) senza nessun `<h2>` sopra: la struttura salta da h1 a h3.
+`Brand` è l'`<h1>`; le sezioni sono `<h2>`; il titolo del brano non deve restare un `<h3>` orfano (salto h1 → h3).
 
-Soluzione preferita: dare al now playing il suo `<h2>` di sezione (es. "Now playing"), eventualmente nascosto visivamente con una classe `sr-only`. Meglio che promuovere il titolo del brano a `<h2>`: la sezione ha un nome, e il nome è informazione utile — anche per la SEO, coerentemente con il punto 2.
+Soluzione preferita: `<h2>` di sezione (“Now playing”), anche `sr-only`, e titolo brano come `<h3>`. Accettabile in v1 anche promuovere il titolo brano a `<h2>` (niente salto di livello; outline un po' meno semantica).
 
-Nota: `ui-spec.md` dice di non usare `h4`/`h5`/`h6` in v1, e questo intervento resta dentro quel vincolo.
+Nota: `ui-spec.md` dice di non usare `h4`/`h5`/`h6` in v1.
 
 ### Checklist
 
-- [ ] `alt=""` in `NowPlaying`, `LastPlayed`, `RecentlyPlayed`
-- [ ] `aria-live="polite"` solo su titolo + crediti
-- [ ] Verificato che non annunci a ogni poll
-- [ ] `<h2>` di sezione per il now playing, classe `sr-only` se nascosto
+- [x] `alt=""` in `NowPlaying`, `LastPlayed`, `RecentlyPlayed`
+- [x] ~~`aria-live`~~ — tagliato di proposito
+- [x] Gerarchia heading: h2 sezione (`sr-only`) + h3 sul titolo in `NowPlaying` e `LastPlayed`
 
 ---
 
@@ -274,6 +267,7 @@ Nota: `ui-spec.md` dice di non usare `h4`/`h5`/`h6` in v1, e questo intervento r
 
 - **Test automatici e CI.** Per un profilo frontend sono un differenziatore, non un prerequisito. Il progetto è personale e didattico, non c'è ricerca di lavoro in corso: il tempo rende molto di più speso sull'artigianato visibile.
 - **Contrasto misurato e `role="progressbar"`.** Non insegnano niente: si apre DevTools e si legge un numero, o si copiano tre attributi da MDN. Se un giorno serviranno requisiti WCAG formali, li detterà il capitolato.
+- **`aria-live` sul now playing.** Pattern didattico valido, ma per un caso studio non accessibile “di missione” è overkill rispetto a alt + heading. Si riprende in dieci minuti se serve come talking point.
 - **Focus visibile sul `<select>`.** `globals.css:36` stila `a:focus-visible`; il select usa il ring di default del browser. Vale un controllo con Tab alla mano, non una voce di piano.
 - **Top Tracks.** `design.md` lo cita nella struttura del progetto ma non è mai stato costruito. Resta una feature per un'iterazione dedicata, non un riempitivo di questa.
 - **Immagine OG dinamica via `next/og`.** Rimandata: il caching delle piattaforme social ne annulla il senso se il contenuto è il brano in ascolto.
