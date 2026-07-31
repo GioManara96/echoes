@@ -21,8 +21,23 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://echoes.giovannimanara.dev"),
   title: "Echoes",
-  description: "What's playing now?",
+  description: "A public listening booth — what’s on air on Spotify, top artists, and recent tracks",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Echoes",
+    description: "A public listening booth — what’s on air on Spotify, top artists, and recent tracks",
+    url: "/",
+    siteName: "Echoes",
+    type: "website",
+    // images: le mette Next da solo se esiste app/opengraph-image.png
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({
