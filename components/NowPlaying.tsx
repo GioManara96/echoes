@@ -158,9 +158,33 @@ export default function NowPlaying({ initialData }: Props) {
         setNowPlaying({ status: "error", message: "We can't reach the server right now. Try again later." });
       }
     };
-    fetchNowPlaying();
-    const interval = setInterval(fetchNowPlaying, 8000);
-    return () => clearInterval(interval);
+
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    const start = () => {
+      if (intervalId !== undefined) return;
+      intervalId = setInterval(fetchNowPlaying, 8000);
+    };
+
+    const stop = () => {
+      if (intervalId === undefined) return;
+      clearInterval(intervalId);
+      intervalId = undefined;
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        fetchNowPlaying();
+        start();
+      }
+    };
+    if (!document.hidden) start();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
