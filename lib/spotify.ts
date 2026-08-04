@@ -8,6 +8,7 @@ import type {
   EpisodeSummary,
   PlayingItem,
   NowPlayingPayload,
+  TopTrack,
 } from "@/types/spotify";
 
 // Module-private types: shape of Spotify's responses, only the fields we actually use
@@ -18,6 +19,10 @@ type AccessTokenResponse = {
 
 type TopArtistsResponse = {
   items: Artist[];
+};
+
+type TopTracksResponse = {
+  items: TopTrack[];
 };
 
 // Spotify raw shapes for currently-playing — NOT our TrackSummary/EpisodeSummary.
@@ -101,6 +106,11 @@ const clientSecret = requestEnv("SPOTIFY_CLIENT_SECRET");
 const refreshToken = requestEnv("SPOTIFY_REFRESH_TOKEN");
 let cachedAccessToken: { value: string; expiresAt: number } | null = null;
 
+const TOP_TRACKS_TTL = 60 * 60_000;
+const TOP_TRACKS_LIMIT = 5;
+const TOP_TRACKS_TIME_RANGE: TimeRange = "medium_term";
+let cachedTopTracks: { value: TopTrack[]; fetchedAt: number } | null = null;
+
 // Returns a valid access token, transparently refreshing it when missing or stale.
 // The cache lives in module scope, so it is shared across all requests of the same server process.
 export async function getAccessToken(): Promise<string> {
@@ -164,6 +174,39 @@ export async function getTopArtists(
     return artistsResponse.items;
   } catch (error) {
     // Stale-if-error: yesterday's top artists beat an error page. Only rethrow with nothing cached.
+    if (cached) {
+      return cached.value;
+    }
+    throw error;
+  }
+}
+
+export async function getTopTracks(): Promise<TopTrack[]> {
+  const cached = cachedTopTracks;
+  if (cached && Date.now() - cached.fetchedAt < TOP_TRACKS_TTL) {
+    return cached.value;
+  }
+
+  try {
+    const accessToken = await getAccessToken();
+    const response = await fetch(
+      `https://api.spotify.com/v1/me/top/tracks?time_range=${TOP_TRACKS_TIME_RANGE}&limit=${TOP_TRACKS_LIMIT}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to get top tracks: ${response.status} ${await response.text()}`);
+    }
+
+    const tracksResponse: TopTracksResponse = await response.json();
+    cachedTopTracks = { value: tracksResponse.items, fetchedAt: Date.now() };
+    return tracksResponse.items;
+  } catch (error) {
     if (cached) {
       return cached.value;
     }
