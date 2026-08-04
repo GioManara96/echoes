@@ -6,6 +6,7 @@ import Brand from "@/components/Brand";
 import NowPlayingSection from "@/components/NowPlayingSection";
 import NowPlayingSkeleton from "@/components/NowPlayingSkeleton";
 import { Suspense } from "react";
+import TopTracks from "@/components/TopTracks";
 
 export default async function Home({
   searchParams,
@@ -24,6 +25,7 @@ export default async function Home({
       </Suspense>
       <TimeRangeTabs timeRange={range} limit={limit} top={top} />
       <TopArtists range={range} top={top} />
+      <TopTracks />
       <RecentlyPlayed limit={limit} />
     </main>
   );
