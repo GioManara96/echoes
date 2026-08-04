@@ -76,3 +76,23 @@ export type RecentlyPlayedLimit = (typeof RECENTLY_PLAYED_LIMITS)[number];
 
 export const TOP_ARTISTS_LIMITS = ["5", "10", "20"] as const;
 export type TopArtistsLimit = (typeof TOP_ARTISTS_LIMITS)[number];
+
+export type TopTrack = {
+  id: string;
+  name: string;
+  external_urls: {
+    spotify: string;
+  };
+  artists: {
+    id: string;
+    name: string;
+    external_urls: {
+      spotify: string;
+    };
+  }[];
+  album: {
+    images: {
+      url: string;
+    }[];
+  };
+};
